@@ -1,48 +1,50 @@
 """
-Database Schemas
+Database Schemas for LIVARO Home
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Jede Pydantic-Klasse entspricht einer Collection in MongoDB.
+Der Collection-Name ist der kleingeschriebene Klassenname.
 """
+from pydantic import BaseModel, Field, EmailStr
+from typing import Optional, List
+from datetime import datetime
 
-from pydantic import BaseModel, Field
-from typing import Optional
+class Account(BaseModel):
+    vorname: str = Field(..., description="Vorname")
+    nachname: str = Field(..., description="Nachname")
+    email: EmailStr = Field(..., description="E-Mail-Adresse")
+    telefon: Optional[str] = Field(None, description="Telefonnummer")
+    rolle: str = Field("kunde", description="Rolle im System")
+    marketing_opt_in: bool = Field(False, description="Einwilligung Marketing")
 
-# Example schemas (replace with your own):
+class Plan(BaseModel):
+    account_email: EmailStr = Field(..., description="Zuordnung über E-Mail des Accounts")
+    titel: str = Field(..., description="Titel des Plans")
+    beschreibung: Optional[str] = Field(None, description="Beschreibung")
+    status: str = Field("in_planung", description="Status des Plans")
+    budget: Optional[float] = Field(None, ge=0, description="Budget in EUR")
 
-class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+class Angebot(BaseModel):
+    plan_id: Optional[str] = Field(None, description="Referenz auf Plan")
+    titel: str = Field(..., description="Titel des Angebots")
+    preis: float = Field(..., ge=0, description="Preis in EUR")
+    gueltig_bis: Optional[datetime] = Field(None, description="Gültig bis")
+    status: str = Field("entwurf", description="Status")
 
-class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+class Beratung(BaseModel):
+    account_email: EmailStr = Field(..., description="Zuordnung über E-Mail des Accounts")
+    thema: str = Field(..., description="Beratungsthema")
+    nachricht: Optional[str] = Field(None, description="Nachricht/Details")
+    bevorzugter_termin: Optional[str] = Field(None, description="Terminpräferenz ISO-String")
 
-# Add your own schemas here:
-# --------------------------------------------------
+class ServiceTicket(BaseModel):
+    account_email: EmailStr = Field(..., description="Zuordnung über E-Mail des Accounts")
+    kategorie: str = Field(..., description="Kategorie")
+    beschreibung: str = Field(..., description="Beschreibung")
+    prioritaet: str = Field("normal", description="Priorität")
+    status: str = Field("offen", description="Status")
 
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+class Inspiration(BaseModel):
+    titel: str = Field(..., description="Titel")
+    tags: List[str] = Field(default_factory=list, description="Tags")
+    bild_url: Optional[str] = Field(None, description="Bild-URL")
+    beschreibung: Optional[str] = Field(None, description="Beschreibung")
